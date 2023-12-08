@@ -1,58 +1,37 @@
-interface Point {
-  x: number
-  y: number
-}
-
 export function findEngineParts(schematic: string[]) {
-  const height = schematic.length
-  const width = schematic[0].length
   let sum = 0
 
-  const getAdjacentAboveBelow = (point: Point) => {
-    const points: Point[] = []
+  for (const [row, line] of schematic.entries()) {
+    const symbolMatches = Array.from(line.matchAll(/[^.\d]/g))
+    for (const symbolMatch of symbolMatches) {
+      const symbolMatchIndex = symbolMatch.index
 
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (dx === 0 && dy === 0) {
-          continue
-        }
-        if (
-          point.x + dx >= 0 &&
-          point.x + dx < width &&
-          point.y + dy >= 0 &&
-          point.y + dy < height
-        ) {
-          points.push({ x: point.x + dx, y: point.y + dy })
-        }
+      if (typeof symbolMatchIndex === 'undefined') {
+        throw new Error(`Symbol match missing index: ${JSON.stringify(symbolMatch)}`)
       }
-    }
 
-    return points
-  }
+      const allNumberMatches = [-1, 0, 1].reduce(
+        (all, rowDelta) => [
+          ...all,
+          ...Array.from((schematic[row + rowDelta] ?? '').matchAll(/(\d+)/g)),
+        ],
+        new Array<RegExpMatchArray>()
+      )
 
-  let currentNumberStr = ''
-  let isValid = false
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const char = schematic[y][x]
-
-      if (/\d/.test(char)) {
-        currentNumberStr += char
-
-        const adjacentPoints = getAdjacentAboveBelow({ x, y })
-        for (const adjPoint of adjacentPoints) {
-          if (/[^.\d]/.test(schematic[adjPoint.y][adjPoint.x])) {
-            isValid = true
+      const validNumbers = allNumberMatches
+        .filter((numberMatch) => {
+          const numberMatchIndex = numberMatch.index
+          if (typeof numberMatchIndex === 'undefined') {
+            throw new Error(`Number match error missing index: ${JSON.stringify(numberMatch)}`)
           }
-        }
-      }
-      if (/[^\d]/.test(char) || x === width - 1) {
-        if (currentNumberStr && isValid) {
-          sum += Number(currentNumberStr)
-        }
-        isValid = false
-        currentNumberStr = ''
-      }
+          return (
+            numberMatchIndex + numberMatch[0].length >= symbolMatchIndex &&
+            numberMatchIndex <= symbolMatchIndex + 1
+          )
+        })
+        .map((numberMatch) => numberMatch[0])
+
+      sum += validNumbers.reduce((sum, next) => sum + Number(next), 0)
     }
   }
 
