@@ -1,4 +1,7 @@
-import { calculateScratchcardPoints } from '../calculateScratchcardPoints'
+import {
+  calculateScratchcardPoints,
+  processWinningScratchcards,
+} from '../calculateScratchcardPoints'
 
 const testData = [
   'Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53',
@@ -12,5 +15,11 @@ const testData = [
 describe('calculateScratchcardPoints', () => {
   it('parses the given test data', () => {
     expect(calculateScratchcardPoints(testData)).toBe(13)
+  })
+})
+
+describe('processWinningScratchcards', () => {
+  it('parses the given test data', () => {
+    expect(processWinningScratchcards(testData)).toBe(30)
   })
 })
